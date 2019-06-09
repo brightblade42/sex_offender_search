@@ -5,8 +5,8 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
-use actix;
-use actix_web::{server::HttpServer, App, HttpRequest, HttpResponse, Error, Responder, http, error, Json, Result, Path};
+use actix_web::{web, App, Responder, HttpServer, HttpRequest, HttpResponse, Result};
+//use actix_web::{server::HttpServer, App, HttpRequest, HttpResponse, Error, Responder, http, error, Json, Result, Path};
 
 use actix_web::http::Method;
 use bytes;
@@ -100,7 +100,7 @@ fn build_search_text(query: &SearchQuery) -> String {
 }
 
 //deserialize Info from requests body
-fn index(info: Json<Info>) -> Result<String> {
+fn index(info: web::Json<Info>) -> Result<String> {
     Ok(format!("Welcome {}!", info.username))
 }
 
@@ -151,7 +151,7 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
     Ok(search_vec)
 }
 
-fn search(info: Json<SearchQuery>) -> HttpResponse {
+fn search(info: web::Json<SearchQuery>) -> HttpResponse {
     let tq = info.into_inner();
     let rez = search_offenders(&tq).expect("my dam results");
 
@@ -169,7 +169,7 @@ fn search(info: Json<SearchQuery>) -> HttpResponse {
         .json(jr)
 }
 
-fn get_photo(info: Path<String>) -> HttpResponse {
+fn get_photo(info: web::Path<String>) -> HttpResponse {
 
     let photo_name = info;
     let conn = Connection::open(SQL_PATH).expect("Unable to open data connection");
@@ -194,16 +194,16 @@ fn get_photo(info: Path<String>) -> HttpResponse {
 }
 
 
-fn main() {
-    let sys = actix::System::new("example");
-    actix_web::server::new(|| App::new()
-                               .resource(
-                                       "/search",
-                                       |r| r.method(http::Method::POST).with(search))
-        .resource("/photo/{name}", |r| r.method(http::Method::GET).with(get_photo))
-    ).bind("127.0.0.1:8090")
-        .expect("my damn server to run.")
-        .start();
+fn main() -> std::io::Result<()> {
+    //let sys = actix::System::new("example");
+    //actix_web::server::new(|| App::new()
 
-    let _ = sys.run();
+    HttpServer::new(|| App::new().service(
+                               web::resource("/search").to(search))
+        .service(web::resource("/photo/{name}").to(get_photo)))
+        .bind("127.0.0.1:8090")
+        .expect("my damn server to run.")
+        .run()
+
+   // let _ = sys.run();
 }
