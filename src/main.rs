@@ -78,6 +78,24 @@ fn build_search_text(query: &SearchQuery) -> String {
         }
         search_frag.push_str(&format!(" dateOfBirth like '{}'", x));
     }
+
+    if let Some(states) = &query.state {
+        if add_op {
+            search_frag.push_str(" and ");
+        }
+        search_frag.push_str(" state in (");
+        let mut cnt = 0;
+        let limit = states.len() -1;
+        for st in states {
+            search_frag.push_str(&format!("'{}'", st));
+            if cnt != limit {
+                search_frag.push_str(",");
+            }
+            cnt+=1;
+        }
+        search_frag.push_str(" )");
+    }
+    let search_frag = search_frag.trim_end_matches(",").to_string();
     search_frag
 }
 
