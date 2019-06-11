@@ -4,10 +4,8 @@ extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
-
+use std::env;
 use actix_web::{web, App, Responder, HttpServer, HttpRequest, HttpResponse, Result};
-//use actix_web::{server::HttpServer, App, HttpRequest, HttpResponse, Error, Responder, http, error, Json, Result, Path};
-
 use actix_web::http::Method;
 use bytes;
 use rusqlite::{Connection, params, NO_PARAMS, ToSql};
@@ -98,17 +96,15 @@ fn build_search_text(query: &SearchQuery) -> String {
     let search_frag = search_frag.trim_end_matches(",").to_string();
     search_frag
 }
-
 //deserialize Info from requests body
 fn index(info: web::Json<Info>) -> Result<String> {
     Ok(format!("Welcome {}!", info.username))
 }
 
 fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
-    //let sql_path  = db_path()?;
 
-
-    let conn = Connection::open(SQL_PATH).expect("Unable to open data connection");
+    let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
+    let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
 
     let qry = format!(r#"Select id,name,addresses,dateOfBirth,age,
@@ -171,8 +167,9 @@ fn search(info: web::Json<SearchQuery>) -> HttpResponse {
 
 fn get_photo(info: web::Path<String>) -> HttpResponse {
 
+    let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
     let photo_name = info;
-    let conn = Connection::open(SQL_PATH).expect("Unable to open data connection");
+    let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut photo: Vec<u8> = Vec::new();
 
     let qry = format!("Select data from photos where name='{}'", photo_name);
@@ -185,7 +182,7 @@ fn get_photo(info: web::Path<String>) -> HttpResponse {
 
     for x in results {
         photo = x.unwrap();
-        println!("Ya fookn gobshite ya");
+        //println!("Ya fookn gobshite ya");
     }
 
     HttpResponse::Ok()
@@ -201,7 +198,7 @@ fn main() -> std::io::Result<()> {
     HttpServer::new(|| App::new().service(
                                web::resource("/search").to(search))
         .service(web::resource("/photo/{name}").to(get_photo)))
-        .bind("127.0.0.1:8090")
+        .bind("0.0.0.0:8090")
         .expect("my damn server to run.")
         .run()
 
