@@ -1,0 +1,6 @@
+POST http://brightblade.io:8080/search
+Content-Type: application/json
+
+{
+    "name": "Billy%"
+}

@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "/home/d-rezzer/code/eyemetric/sexoffenderimporter"
+		}
+	],
+	"settings": {
+		"asciidoc.asciidoctor_command": "/usr/bin/asciidoctor",
+		"asciidoc.asciidoctorpdf_command": "/usr/bin/asciidoctor-pdf",
+		"asciidoc.preview.useEditorStyle": false
+	}
+}
