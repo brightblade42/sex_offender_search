@@ -6,19 +6,19 @@ Ryan Lee Martin <ryanlmartin@gmail.com>
 :highlightjs-theme: xcode
 v1.0, 2019-06-14
 :toc: left
-:myvar: super-duper
 == First Section
 
 === That's just like, your opinion man
 [quote, Walter, Big Lebowski]
 ____
-Shut the fuck up Donnie!
+The dude abides
 ____
+
 
 .Table Neato
 |===
-|Name of Column 1 |Name of Column 2 |Name of Column 3 (1)
-(2)
+|Name of Column 1 |Name of Column 2 |Name of Column 3 
+
 |This is neat, row 1
 |Cell in column 2, row 1
 |Cell in column 3, row 1
@@ -44,10 +44,6 @@ That means you can include raw HTML, like this embedded Gist:
 The so called sidebar
 ****
 
-
-video::pxd93jb1OAk[youtube]
-video::pxd93jb1OAk[youtube]
-video::pxd93jb1OAk[youtube]
 
 .Toggle me
 [%collapsible]
@@ -87,11 +83,12 @@ It was designed from the start to be a shorthand syntax
 for producing professional documents like DocBook and LaTeX.
 ****
 
-.Rust is cool
-[source,rust,indent=4]
-----
-include::src/main.rs[lines=16..32]
-----
+//.Rust is cool
+/nt=4]
+//----
+//nclude::src/main.rs[lines=16..32]
+//----
+
 
 [source, rust]
 ----

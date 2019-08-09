@@ -12,7 +12,6 @@ use rusqlite::{params, Connection, ToSql, NO_PARAMS};
 use std::env;
 use std::fs;
 
-
 #[derive(Deserialize)]
 struct Info {
     username: String,
@@ -23,11 +22,18 @@ struct Offender {
     id: u32,
     name: String,
     dateOfBirth: String,
-    age: String,
+    eyes: String,
+    hair: String,
+    height: String,
+    weight: String,
+    race: String,
+    sex: String,
+    state: String,
+//    age: String,
+    aliases: serde_json::Value,
     addresses: serde_json::Value,
     offenses: serde_json::Value,
-    aliases: serde_json::Value,
-    personalDetails: serde_json::Value,
+    scarsTattoos: serde_json::Value,
     photos: serde_json::Value,
 }
 
@@ -40,7 +46,6 @@ struct SearchQuery {
     lastName: Option<String>,
     dob: Option<String>,
     state: Option<Vec<String>>,
-
 }
 
 ///Builds the search portion of the search query.
@@ -103,14 +108,24 @@ fn index(info: web::Json<Info>) -> Result<String> {
 }
 
 fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
-
     let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
-
+/*
+    id: u32,
+    name: String,
+    dateOfBirth: String,
+    eyes: String,
+    hair: String,
+    height: String,
+    weight: String,
+    race: String,
+    sex: String,
+    state: String,
+    */
     let qry = format!(
-        r#"Select id,name,addresses,dateOfBirth,age,
-                        offenses,aliases,personalDetails,photos
+        r#"Select id,name,dateOfBirth,eyes,hair,height,weight,race,sex,state,
+                        aliases,addresses, offenses,scarsTattoos,photos
                         from SexOffender
                         where {}"#,
         build_search_text(query)
@@ -120,32 +135,38 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
     let mut results = stmt
         .query_map(NO_PARAMS, |row| {
             //TODO see if api lets me get these values as the type i need.
-            let ad: String = row.get(2)?;
-            let off: String = row.get(5)?;
-            let alias: String = row.get(6)?;
-            let pd: String = row.get(7)?;
-            let ph: String = row.get(8)?;
+
+            let alias: String = row.get(10)?;
+            let ad: String = row.get(11)?;
+            let off: String = row.get(12)?;
+            let st: String = row.get(13)?;
+            let ph: String = row.get(14)?;
             let addresses = serde_json::from_str(ad.as_str()).expect("a damn alias");
             let offenses = serde_json::from_str(off.as_str()).expect("a dam value");
             let aliases = serde_json::from_str(alias.as_str()).expect("a damn alias");
-            let personalDetails = serde_json::from_str(pd.as_str()).expect("a damn alias");
+            let scarsTattoos = serde_json::from_str(st.as_str()).expect("a damn alias");
             let photos = serde_json::from_str(ph.as_str()).expect("a damn photo");
             let mut offender = Offender {
                 id: row.get(0)?,
                 name: row.get(1)?,
-                addresses, // row.get(2)?,//json!(addr),
-                dateOfBirth: row.get(3).unwrap_or(String::from("")),
-                age: row.get(4).unwrap_or(String::from("")),
-                offenses,
+                dateOfBirth: row.get(2)?, //.unwrap_or(String::from("")),
+                eyes: row.get(3)?,
+                hair: row.get(4)?,
+                height: row.get(5)?,
+                weight:row.get(6)?,
+                race: row.get(7)?,
+                sex: row.get(8)?,
+                state: row.get(9)?,
                 aliases,
-                personalDetails,
+                addresses,
+                offenses,
+                scarsTattoos,
                 photos,
             };
 
             Ok(offender)
         })
         .expect("result row not to break");
-
 
     for r in results {
         search_vec.push(r.unwrap());
@@ -170,7 +191,6 @@ fn search(info: web::Json<SearchQuery>) -> HttpResponse {
 }
 
 fn get_photo(info: web::Path<String>) -> HttpResponse {
-
     let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
     let photo_name = info;
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
@@ -200,11 +220,7 @@ fn docs(req: web::HttpRequest) -> NamedFile {
     NamedFile::open("./test.html").expect("my dam file")
 }
 
-
 fn main() -> std::io::Result<()> {
-    //let sys = actix::System::new("example");
-    //actix_web::server::new(|| App::new()
-
     HttpServer::new(|| {
         App::new()
             .service(web::resource("/search").to(search))
