@@ -8,11 +8,11 @@ v1.0, 2019-08-01
 This service provides a simple json api to
 search for registered sex offenders. There are two api endpoints.
 
-/Search::
+POST /Search::
 Searches return a json formatted document containing an array of objects +
 representing each matching sex offender.
 
-/Photo/{state_abbreviation}/{PhotoName}::
+GET /Photo/{State}/{Photo}::
 The names of any available Photos are included in the search results for each
 sex offender. +
 The photo names can the be use to build a url to retrieve the image files for display
@@ -50,7 +50,7 @@ and have a current *address* in *Denver, Colorado*.
 ====
 
 CAUTION: If you don't want to search on every available field then you can leave the
-undesired fields out of the json object. Remove them completely,
+undesired fields out of the search object. Remove them completely,
 don't pass an empty value to a property you don't want searched. You will get 0
 or incorrect results.
 
@@ -79,7 +79,7 @@ John or Bill in their name.
 
 
 === More about the search syntax
-The json object contains a set of optional properties and values.
+The search object contains a set of optional properties and values.
 The  properties represent a searchable field and the values contain
 the search terms using a wildcard syntax.
 
@@ -103,66 +103,179 @@ possible characters for building a robust search.
 |===
 
 ====
-TIP: These characters can be used multiple times and in combination to build up
+TIP: These wildcard characters can be used multiple times and in combination to build up
 a wide range of search possibilities.
 
 WARNING: You should [red]#surround every search in a pair of *%* characters# +
-Unfortunately nature of the sex offender data is a bit sloppy and inconsistent
-There are no real standards for formatting between different states. Surrounding
-a search with % will help compensate for poorly formatted data.  You can still
-add more % and _ within the search to match characters.
+rather than just on one side or the other for best results.
+Unfortunately, the nature of the sex offender data is a bit sloppy and inconsistent
+in its formatting. There are no real standards for formatting between different
+states. Surrounding a search with % will help compensate for poorly formatted data.
+You can still add more % and _ within the search to match characters.
 Hopefully this will improve over time but it's the wild west out there!
 This data is build from web scraping data across 50 states and that's a dubious
 proposition for things like good formatting.
 ====
 
-== Second Section
+== Examining the Search Results
 
-.Tip List
+Search results are returned as A JSON formatted document.
+There are 3 top level properties:
+
+currentPage:: The number of returned sex offenders
+maxPageResults:: The limit of results per page or "no limit" (the default)
+results:: An array of JSON objects where each object represents a sex offender.
+
+NOTE: The paging feature is not currently available. All matching results
+are returned for a search.
+
+
+.JSON result properties
 ****
-* item 1 
+|===
+|Property| Value
+|dateOfBirth| a birthdate
+|eyes| eye color
+|hair| color and/or style
+|id| the record id.
+|name| the name of the sex offender
+|sex| the sex/ gender of sex offender
+|state| the state where offender is registered
+|height| height
+|weight| weight
+| addresses
+| an array of objects containing an address field +
+{ "address": "some address"}
 
-TIP: Man with itchy but wake up with smelly finger
+| aliases
+| an array of zero or more listed aliases +
+["alias1", "alias2"]
 
-[TIP]
+| offenses
+| an array of objects for each offense. +
+[ { "offense": "Rape"}, {"offense": "Soliciting a minor"}]
+
+| photos
+| an array of Photo names +
+["1_1_1.png","1_2_1.png"]
+
+| scarsTattoos
+| an array of identifying body markings +
+  ["Scar on foot", "Tatoo of bald eagle on right arm"]
+
+
+|===
+****
+
+.JSON Results Document example
+****
+[source, json]
+----
+{
+    "currentPage": 36,
+    "maxPageResults": "nolimit",
+    "results": [
+        {
+            "addresses": [
+                {
+                    "address": "150 SPRING ST  MORRISON, 80456"
+                },
+                {
+                    "address": "0000 23RD & CURTIS  DENVER, 80205"
+                }
+            ],
+            "aliases": [
+                "AGULAR,JOHNNY",
+                "AGUILAR,JOHNNY SR",
+                "ALCARAZ,JOHNNY",
+                "AGUILAR,JOHNNY A"
+            ],
+            "dateOfBirth": "10-24-1958",
+            "eyes": "Brown",
+            "hair": "Black",
+            "height": "6' 00\"",
+            "id": "1272",
+            "name": "AGUILAR,JOHNNY",
+            "offenses": [
+                {
+                    "offense": "Sexual assault on a child"
+                }
+            ],
+            "photos": [
+                "1272_1_1.png"
+            ],
+            "race": "White",
+            "scarsTattoos": [
+                "Tattoo on Arm - left",
+                "Tattoo on Back",
+                "Other medical disorders/conditions - identify in MIS field",
+                "Tattoo on Arm - right",
+                "Scar on Back",
+                "Scar on Cheek (face) - left",
+                "Tattoo on Forearm - right",
+                "Tattoo on Arm - left upper",
+                "Scar on Arm - left upper",
+                "Scar on Arm - right upper",
+                "Tattoo on Forearm - left",
+                "Tattoo on Arm - right upper",
+                "Tattoo on Hand - left",
+                "Tattoo on Elbow - left",
+                "Tattoo on Hand - right",
+                "Tattoo on Wrist - left"
+            ],
+            "sex": "Male",
+            "state": "CO",
+            "weight": "160 lb"
+        },
+
+        ... more records would countinue on
+
+----
+****
+
+
+==== Important things to keep in mind
+
 ====
 
-An admonition block may contain complex content.
+CAUTION: When searching across states keep in mind that Formats change.
 
-.A list
-- one
-- two
-- three
+.dateOfBirth formats
+****
+* *10-15-1934*
+*  *10/15/1934*
+* or just a year *1981* +
+*  Sometimes it is just an age like *46*.
+*  Sometime times it might be an age combined with a date  *(19) 1/1/2000* +
+*  It could be some other ad-hoc format. So, be aware.
+****
 
-Another paragraph.
+NOTE: Given the above information, formats tend to be consistent within a single state.
 
+NOTE: Even thought the format of some field data may be inconsistent. The JSON document
+is consistent in its structure.
 ====
-* Item 2 Very nice very nice
+
+== Photos
+[.lead]
+Binary Photo data is not returned in the initial search results. An array of zero or more
+Photo names are returned for each sex offender. The way to get to a photo is
+to build up a url and request the image from the Sex offender service.
+
+All the information needed to retrieve photos for a sex offender are included in the search results
+The Photo endpoint is a regular GET request.
+
+.url format
+****
+http:://{domain}/{State}/{Photo}
 ****
 
-.AsciiDoc history
-****
-AsciiDoc was first released in Nov 2002 by Stuart Rackham.
-It was designed from the start to be a shorthand syntax
-for producing professional documents like DocBook and LaTeX.
-****
-
-//.Rust is cool
-/nt=4]
-//----
-//nclude::src/main.rs[lines=16..32]
-//----
+That is it!
 
 
-[source, rust]
-----
-let x = 5;
-let mut p = &x;
-----
 
-[source, bash]
-----
-$ sudo apt install piggy
-$ sudo apt update
-$ sudo apt upgrade
-----
+
+
+
+
+

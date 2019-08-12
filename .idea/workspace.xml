@@ -14,7 +14,9 @@
   <component name="ChangeListManager">
     <list default="true" id="58984f54-f6dd-4b62-95c6-00257a787d73" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/sex_offender_search.adoc" beforeDir="false" afterPath="$PROJECT_DIR$/docs/sex_offender_search.adoc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/sex_offender_search.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/sex_offender_search.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -107,7 +109,7 @@
       <workItem from="1565453775190" duration="333000" />
       <workItem from="1565454138892" duration="4300000" />
       <workItem from="1565458495176" duration="10154000" />
-      <workItem from="1565534230956" duration="22965000" />
+      <workItem from="1565534230956" duration="35231000" />
     </task>
     <servers />
   </component>

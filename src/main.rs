@@ -233,11 +233,11 @@ fn get_photo(info: web::Path<(String,String)>) -> HttpResponse {
 use actix_files::NamedFile;
 
 fn docs(req: web::HttpRequest) -> NamedFile {
-    NamedFile::open("./test.html").expect("my dam file")
+    NamedFile::open("./docs/sex_offender_search.html").expect("my dam file")
 }
 
 fn main() -> std::io::Result<()> {
-    env::set_var("SQL_PATH","/home/d-rezzer/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    //env::set_var("SQL_PATH","/home/d-rezzer/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
     HttpServer::new(|| {
         App::new()
             .service(web::resource("/search").to(search))
