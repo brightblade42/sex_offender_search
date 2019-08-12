@@ -19,7 +19,7 @@ struct Info {
 
 #[derive(Debug, Serialize)]
 struct Offender {
-    id: u32,
+    id: String,
     name: String,
     dateOfBirth: String,
     eyes: String,
@@ -29,7 +29,6 @@ struct Offender {
     race: String,
     sex: String,
     state: String,
-//    age: String,
     aliases: serde_json::Value,
     addresses: serde_json::Value,
     offenses: serde_json::Value,
@@ -41,12 +40,13 @@ struct Offender {
 //#[derive(Extract)]
 #[derive(Deserialize)]
 struct SearchQuery {
-    name: Option<String>,
-    firstName: Option<String>,
-    lastName: Option<String>,
+    name: Option<Vec<String>>,
     dob: Option<String>,
+    address: Option<String>,
     state: Option<Vec<String>>,
 }
+
+
 
 ///Builds the search portion of the search query.
 ///This fits the search requirements but it would be nice
@@ -59,28 +59,46 @@ fn build_search_text(query: &SearchQuery) -> String {
 
     match &query.name {
         Some(x) => {
-            search_frag.push_str(&format!(" name like '{}'", x));
+
+            let mut cnt = 0;
+            let mut limit = 0;
+            if x.len() == 0 {
+                limit = 0;
+            } else {
+                limit = x.len() - 1;
+            }
+
+            search_frag.push_str(" ( ");
+            for n in x {
+                search_frag.push_str(&format!(" name like '{}'", n));
+                if cnt != limit {
+                    search_frag.push_str(" or ");
+                }
+                cnt += 1;
+            }
+
+            search_frag.push_str(" ) ");
+            //search_frag.push_str(&format!(" name like '{}'", x));
             add_op = true;
         }
         None => {
-            if let Some(x) = &query.firstName {
-                search_frag.push_str(&format!(" name like '{}'", x));
-                add_op = true;
-            }
-            if let Some(x) = &query.lastName {
-                if add_op {
-                    search_frag.push_str(" and ");
-                }
-                search_frag.push_str(&format!(" name like '{}'", x));
-            }
+            add_op = false;
         }
-    }
 
+    }
+    if let Some(addr) = &query.address {
+        if add_op {
+            search_frag.push_str(" and ");
+        }
+        search_frag.push_str(&format!(" addresses like '{}'", addr));
+        add_op = true;
+    }
     if let Some(x) = &query.dob {
         if add_op {
             search_frag.push_str(" and ");
         }
         search_frag.push_str(&format!(" dateOfBirth like '{}'", x));
+        add_op = true;
     }
 
     if let Some(states) = &query.state {
@@ -89,7 +107,12 @@ fn build_search_text(query: &SearchQuery) -> String {
         }
         search_frag.push_str(" state in (");
         let mut cnt = 0;
-        let limit = states.len() - 1;
+        let mut limit = 0;
+        if states.len() == 0 {
+            limit = 0;
+        } else {
+            limit = states.len() - 1;
+        }
         for st in states {
             search_frag.push_str(&format!("'{}'", st));
             if cnt != limit {
@@ -102,33 +125,18 @@ fn build_search_text(query: &SearchQuery) -> String {
     let search_frag = search_frag.trim_end_matches(",").to_string();
     search_frag
 }
-//deserialize Info from requests body
-fn index(info: web::Json<Info>) -> Result<String> {
-    Ok(format!("Welcome {}!", info.username))
-}
 
 fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
     let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
-/*
-    id: u32,
-    name: String,
-    dateOfBirth: String,
-    eyes: String,
-    hair: String,
-    height: String,
-    weight: String,
-    race: String,
-    sex: String,
-    state: String,
-    */
     let qry = format!(
-        r#"Select id,name,dateOfBirth,eyes,hair,height,weight,race,sex,state,
+        r#"Select distinct id,name,dateOfBirth,eyes,hair,height,weight,race,sex,state,
                         aliases,addresses, offenses,scarsTattoos,photos
                         from SexOffender
-                        where {}"#,
-        build_search_text(query)
+                        where {} {}"#,
+        build_search_text(query),
+        " order by state, name"
     );
 
     let mut stmt = conn.prepare(&qry)?;
@@ -141,19 +149,21 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
             let off: String = row.get(12)?;
             let st: String = row.get(13)?;
             let ph: String = row.get(14)?;
+
             let addresses = serde_json::from_str(ad.as_str()).expect("a damn alias");
-            let offenses = serde_json::from_str(off.as_str()).expect("a dam value");
             let aliases = serde_json::from_str(alias.as_str()).expect("a damn alias");
+            let offenses = serde_json::from_str(off.as_str()).expect("a dam value");
             let scarsTattoos = serde_json::from_str(st.as_str()).expect("a damn alias");
             let photos = serde_json::from_str(ph.as_str()).expect("a damn photo");
+
             let mut offender = Offender {
                 id: row.get(0)?,
                 name: row.get(1)?,
-                dateOfBirth: row.get(2)?, //.unwrap_or(String::from("")),
+                dateOfBirth: row.get(2)?,
                 eyes: row.get(3)?,
                 hair: row.get(4)?,
                 height: row.get(5)?,
-                weight:row.get(6)?,
+                weight: row.get(6)?,
                 race: row.get(7)?,
                 sex: row.get(8)?,
                 state: row.get(9)?,
@@ -174,10 +184,12 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
     Ok(search_vec)
 }
 
+///converts the Json request body into a struct
+///that we use to build a search query. We run that query
+///and return the results as a json document.
 fn search(info: web::Json<SearchQuery>) -> HttpResponse {
     let tq = info.into_inner();
     let rez = search_offenders(&tq).expect("my dam results");
-
     let rezcount = rez.len();
 
     let jr = json!({
@@ -190,13 +202,18 @@ fn search(info: web::Json<SearchQuery>) -> HttpResponse {
     HttpResponse::Ok().content_type("application/json").json(jr)
 }
 
-fn get_photo(info: web::Path<String>) -> HttpResponse {
+///Search results contain zero or more photo names that can be
+///passed back to the server to retrieve the actual image data.
+///An HttpResponse with an image content type is returned.
+fn get_photo(info: web::Path<(String,String)>) -> HttpResponse {
     let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
-    let photo_name = info;
+    let photo_name = &info.1;
+   let state = &info.0;
+
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut photo: Vec<u8> = Vec::new();
 
-    let qry = format!("Select data from photos where name='{}'", photo_name);
+    let qry = format!("Select data from photos where name='{}' and state='{}'", photo_name, state);
     let mut stmt = conn.prepare(&qry).expect("my damn prepared query");
 
     let mut results = stmt
@@ -208,7 +225,6 @@ fn get_photo(info: web::Path<String>) -> HttpResponse {
 
     for x in results {
         photo = x.unwrap();
-        //println!("Ya fookn gobshite ya");
     }
 
     HttpResponse::Ok().content_type("image/jpg").body(photo)
@@ -221,14 +237,15 @@ fn docs(req: web::HttpRequest) -> NamedFile {
 }
 
 fn main() -> std::io::Result<()> {
+    env::set_var("SQL_PATH","/home/d-rezzer/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
     HttpServer::new(|| {
         App::new()
             .service(web::resource("/search").to(search))
-            .service(web::resource("/photo/{name}").to(get_photo))
+            .service(web::resource("/photo/{state}/{name}").to(get_photo))
             .service(web::resource("/docs").to(docs))
     })
     .bind("0.0.0.0:8090")
-    .expect("my damn server to run.")
+    .expect("Unable to start search server")
     .run()
 
     // let _ = sys.run();

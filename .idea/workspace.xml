@@ -13,10 +13,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58984f54-f6dd-4b62-95c6-00257a787d73" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/$VIMDATA/%home%d-rezzer%.config%nvim%init.vim" beforeDir="false" afterPath="$PROJECT_DIR$/$VIMDATA/%home%d-rezzer%.config%nvim%init.vim" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/$VIMDATA/%home%d-rezzer%code%rust%scratch%Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/$VIMDATA/%home%d-rezzer%code%rust%scratch%Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sex_offender_search.adoc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/sex_offender_search.adoc" beforeDir="false" afterPath="$PROJECT_DIR$/docs/sex_offender_search.adoc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -39,11 +37,11 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../sexoffenderimporter" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -79,6 +77,16 @@
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
+  <component name="ServiceViewManager">
+    <option name="allServicesViewState">
+      <serviceView>
+        <treeState>
+          <expand />
+          <select />
+        </treeState>
+      </serviceView>
+    </option>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="58984f54-f6dd-4b62-95c6-00257a787d73" name="Default Changelist" comment="" />
@@ -94,7 +102,12 @@
       <workItem from="1560466832282" duration="2402000" />
       <workItem from="1560546678930" duration="1131000" />
       <workItem from="1560975224921" duration="24000" />
-      <workItem from="1565389239916" duration="2788000" />
+      <workItem from="1565389239916" duration="2871000" />
+      <workItem from="1565394293673" duration="870000" />
+      <workItem from="1565453775190" duration="333000" />
+      <workItem from="1565454138892" duration="4300000" />
+      <workItem from="1565458495176" duration="10154000" />
+      <workItem from="1565534230956" duration="22965000" />
     </task>
     <servers />
   </component>
@@ -106,22 +119,15 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/main.rs</url>
-          <line>104</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="CargoCommandRunConfiguration">
         <watch expression="qry" language="Rust" />
@@ -129,24 +135,5 @@
         <watch expression="rezcount" language="Rust" />
       </configuration>
     </watches-manager>
-  </component>
-  <component name="debuggerHistoryManager">
-    <expressions id="watch">
-      <expression>
-        <expression-string>rezcount</expression-string>
-        <language-id>Rust</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>rez</expression-string>
-        <language-id>Rust</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>qry</expression-string>
-        <language-id>Rust</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-    </expressions>
   </component>
 </project>

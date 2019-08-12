@@ -1,58 +1,122 @@
 
-= Introduction to the Sex Offender Service: How to search
+= Sex Offender Search Service
 Ryan Lee Martin <ryanlmartin@gmail.com>
 :icons: font
-:source-highlighter: hightlightjs 
-:highlightjs-theme: xcode
-v1.0, 2019-06-14
+v1.0, 2019-08-01
 :toc: left
-== First Section
 
-=== That's just like, your opinion man
-[quote, Walter, Big Lebowski]
-____
-The dude abides
-____
+This service provides a simple json api to
+search for registered sex offenders. There are two api endpoints.
 
+/Search::
+Searches return a json formatted document containing an array of objects +
+representing each matching sex offender.
 
-.Table Neato
-|===
-|Name of Column 1 |Name of Column 2 |Name of Column 3 
-
-|This is neat, row 1
-|Cell in column 2, row 1
-|Cell in column 3, row 1
-
-|Cell in column 1, row 2
-|Cell in column 2, row 2
-|Cell in column 3, row 2
-|===
+/Photo/{state_abbreviation}/{PhotoName}::
+The names of any available Photos are included in the search results for each
+sex offender. +
+The photo names can the be use to build a url to retrieve the image files for display
 
 
+== How to Search
+A search is made by building up a set of optional search fields as a json object
+and making an *HTTP POST* request. The HTTP Body of the search request will look
+something like the following:
 
-++++
-<p>
-Content in a passthrough block is passed to the output unprocessed.
-That means you can include raw HTML, like this embedded Gist:
-</p>
-
-<script src="https://gist.github.com/mojavelinux/5333524.js">
-</script>
-++++
+[source,json]
+----
+{
+  "name": ["%John%"], // <1>
+  "dob": "%195%", //<2>
+  "address": "%Denver%", //<3>
+  "state": ["CO"]  // <4>
+}
+----
+.What the search means
+****
+Get me *all* registered sex offenders with a *name* like *John* (e.g. John Doe, Bill Johnson) +
+who were *born* in the *1950's* +
+and have a current *address* in *Denver, Colorado*.
 
 ****
-The so called sidebar
-****
+<1> Name Search array.
+<2> Date of birth search
+<3> Address search
+<4> State filter array. Only state abbreviations are accepted. *NO WILDCARDS*
 
 
-.Toggle me
-[%collapsible]
+==== Important things to keep in mind
+
 ====
-Watch this: 
-Now is the winter of our discontent
+
+CAUTION: If you don't want to search on every available field then you can leave the
+undesired fields out of the json object. Remove them completely,
+don't pass an empty value to a property you don't want searched. You will get 0
+or incorrect results.
+
+CAUTION: Given the above information, You *MUST* search on *at least one field*.
+It wouldn't be much of a search then would it?
+
+WARNING: Remember: The fewer properties you include in a search, the broader the search, and the more data that
+will be returned. You should consider NOT searching across ALL states in those cases. For example
+don't search for people named "JOHN" in all 50 states. That would be madness. Avoid madness.
+
+NOTE: If you leave out the state property then you will be searching across *ALL* available states.
+You may want this but refer to the previous warnings for reasons when you don't.
+
+NOTE: When you add multiple search elements to a property that accepts an array as its value (like name)
+you are creating what amounts to an *OR* search for those search terms on that field.
+
+[source,json]
+
+{
+  "name": ["%John%", "%Bill%"]
+}
+
+The above json would return all offenders with
+John or Bill in their name.
 ====
 
-== Second Section 
+
+=== More about the search syntax
+The json object contains a set of optional properties and values.
+The  properties represent a searchable field and the values contain
+the search terms using a wildcard syntax.
+
+The *wildcard* syntax is very simple and contains two
+possible characters for building a robust search.
+
+.Wildcards
+|===
+|Wildcard|Effect
+
+|*%* (percent)
+|matches zero or more characters
+
+|*_* (underscore)
+|matches exactly one character
+
+| %John% | matches John, Johnson
+| %B% |matches Bill, Billy, Bobby Bo, Abby. Anything with a *B*
+| Jo_n | matches John, Joan
+| %196% | matches date from 1960 to 1969
+|===
+
+====
+TIP: These characters can be used multiple times and in combination to build up
+a wide range of search possibilities.
+
+WARNING: You should [red]#surround every search in a pair of *%* characters# +
+Unfortunately nature of the sex offender data is a bit sloppy and inconsistent
+There are no real standards for formatting between different states. Surrounding
+a search with % will help compensate for poorly formatted data.  You can still
+add more % and _ within the search to match characters.
+Hopefully this will improve over time but it's the wild west out there!
+This data is build from web scraping data across 50 states and that's a dubious
+proposition for things like good formatting.
+====
+
+== Second Section
 
 .Tip List
 ****
