@@ -10,4 +10,4 @@ COPY --from=builder /home/rust/src/target/x86_64-unknown-linux-musl/release/sex_
 COPY ./docs/sex_offender_search.html docs/sex_offender_search.html
 ENV SQL_PATH=/usr/local/data/sexoffenders.sqlite
 EXPOSE 80 8080 8090
-CMD ["sex_offender_search"]
+CMD ["/usr/local/app/sex_offender_search"]

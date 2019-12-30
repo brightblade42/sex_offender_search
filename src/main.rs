@@ -5,7 +5,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
-use actix_web::http::Method;
+use actix_web::http::{Method, HeaderMap};
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 
 use rusqlite::{params, Connection, ToSql, NO_PARAMS};
@@ -131,7 +131,7 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
     let qry = format!(
-        r#"Select distinct id,name,dateOfBirth,eyes,hair,height,weight,race,sex,state,
+        r#"Select distinct trim(id) as id,trim(name) as name,dateOfBirth,eyes,hair,height,weight,race,sex,state,
                         aliases,addresses, offenses,scarsTattoos,photos
                         from SexOffender
                         where {} {}"#,
@@ -179,7 +179,15 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
         .expect("result row not to break");
 
     for r in results {
-        search_vec.push(r.unwrap());
+        match r {
+            Ok(off) => {
+                search_vec.push(off);
+            },
+            Err(e) => {
+                println!("record go booom {}", e);
+            }
+        }
+        //search_vec.push(r.unwrap());
     }
     Ok(search_vec)
 }
@@ -188,6 +196,7 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
 ///that we use to build a search query. We run that query
 ///and return the results as a json document.
 fn search(info: web::Json<SearchQuery>) -> HttpResponse {
+
     let tq = info.into_inner();
     let rez = search_offenders(&tq).expect("my dam results");
     let rezcount = rez.len();
@@ -233,11 +242,13 @@ fn get_photo(info: web::Path<(String,String)>) -> HttpResponse {
 use actix_files::NamedFile;
 
 fn docs(req: web::HttpRequest) -> NamedFile {
+
     NamedFile::open("./docs/sex_offender_search.html").expect("my dam file")
 }
 
 fn main() -> std::io::Result<()> {
-    //env::set_var("SQL_PATH","/home/d-rezzer/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    //env::set_var("SQL_PATH","/opt/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
     HttpServer::new(|| {
         App::new()
             .service(web::resource("/search").to(search))

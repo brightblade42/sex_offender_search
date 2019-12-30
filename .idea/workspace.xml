@@ -15,8 +15,6 @@
     <list default="true" id="58984f54-f6dd-4b62-95c6-00257a787d73" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/sex_offender_search.adoc" beforeDir="false" afterPath="$PROJECT_DIR$/docs/sex_offender_search.adoc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/sex_offender_search.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/sex_offender_search.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -39,7 +37,7 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../sexoffenderimporter" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
@@ -67,7 +65,9 @@
       <option name="backtrace" value="SHORT" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
-      <method v="2" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
     </configuration>
     <recent_temporary>
       <list>
@@ -89,6 +89,9 @@
       </serviceView>
     </option>
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="58984f54-f6dd-4b62-95c6-00257a787d73" name="Default Changelist" comment="" />
@@ -109,7 +112,26 @@
       <workItem from="1565453775190" duration="333000" />
       <workItem from="1565454138892" duration="4300000" />
       <workItem from="1565458495176" duration="10154000" />
-      <workItem from="1565534230956" duration="35231000" />
+      <workItem from="1565534230956" duration="41203000" />
+      <workItem from="1565734961111" duration="272000" />
+      <workItem from="1565795118953" duration="2116000" />
+      <workItem from="1566001370533" duration="8982000" />
+      <workItem from="1568304405359" duration="1413000" />
+      <workItem from="1568650036625" duration="1727000" />
+      <workItem from="1568821379422" duration="599000" />
+      <workItem from="1568908689054" duration="13434000" />
+      <workItem from="1570724088200" duration="1309000" />
+      <workItem from="1571067084010" duration="10462000" />
+      <workItem from="1571178376232" duration="8000" />
+      <workItem from="1571245007130" duration="1553000" />
+      <workItem from="1571439695343" duration="58000" />
+      <workItem from="1573485179716" duration="700000" />
+      <workItem from="1573527981750" duration="1656000" />
+      <workItem from="1573676621496" duration="40000" />
+      <workItem from="1573685071454" duration="2986000" />
+      <workItem from="1573917881279" duration="3372000" />
+      <workItem from="1575496316882" duration="1547000" />
+      <workItem from="1577721600435" duration="1024000" />
     </task>
     <servers />
   </component>
@@ -130,6 +152,15 @@
     </option>
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.rs</url>
+          <line>224</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="CargoCommandRunConfiguration">
         <watch expression="qry" language="Rust" />
