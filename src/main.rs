@@ -6,11 +6,15 @@ extern crate serde_json;
 extern crate serde_derive;
 
 use actix_web::http::{Method, HeaderMap};
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{web, App, get, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 
 use rusqlite::{params, Connection, ToSql, NO_PARAMS};
 use std::env;
 use std::fs;
+
+use actix_files::NamedFile;
+use actix_web::client;
+use actix_web::error::ParseError::Uri;
 
 #[derive(Deserialize)]
 struct Info {
@@ -46,13 +50,91 @@ struct SearchQuery {
     state: Option<Vec<String>>,
 }
 
+///Pass on Authorization Token to TPass and let it do the authorization check
+ async fn validate_request(req: &HttpRequest) -> bool {
+
+    let token = req.headers().get("Authorization").unwrap().to_str().unwrap();
+    let client = client::Client::default();
+    let validation_url = env::var("VALIDATE_URL").expect("VALIDATE_URL env var not set");
+    let response = client.get(validation_url)
+        .header("Authorization", token)
+        .send()
+        .await;
+
+    let validation_resp = response.unwrap().body().await.unwrap().len();
+    //4 is length of "true" and true is what we get in the body.
+    if validation_resp == 4 {
+        true
+    } else {
+        false
+    }
+
+}
+///converts the Json request body into a struct
+///that we use to build a search query. We run that query
+///and return the results as a json document.
+async fn search(req: HttpRequest, info: web::Json<SearchQuery>) -> impl Responder {
+
+    if !validate_request(&req).await {
+       return HttpResponse::Unauthorized().finish();
+    }
+
+    let results = search_offenders(&info.into_inner()).await.expect("Unable to get results"); //.expect("my dam results").await;
+    let result_count = results.len();
+
+    let jr = json!({
+        "totalHits": result_count,
+        "maxPageResults": "nolimit",
+        "currentPage": result_count,
+        "results": results,
+    });
+
+    HttpResponse::Ok().content_type("application/json").json(jr)
+}
+
+///Search results contain zero or more photo names that can be
+///passed back to the server to retrieve the actual image data.
+///An HttpResponse with an image content type is returned.
+async fn get_photo(req: HttpRequest, info: web::Path<(String,String)>) -> HttpResponse {
+
+    if !validate_request(&req).await {
+        return HttpResponse::Unauthorized().finish();
+    }
+
+    let sqlp = env::var("SQL_PATH").expect("SQL_PATH Env var not set");
+    let photo_name = &info.1;
+    let state = &info.0;
+
+    let conn = Connection::open(sqlp).expect("Unable to open data connection");
+    let mut photo: Vec<u8> = Vec::new();
+
+    let qry = format!("Select data from photos where name='{}' and state='{}'", photo_name, state);
+    let mut stmt = conn.prepare(&qry).expect("my damn prepared query");
+
+    let mut results = stmt
+        .query_map(NO_PARAMS, |row| {
+            let bts: Vec<u8> = row.get(0)?;
+            Ok(bts)
+        })
+        .expect("My damn bytes");
+
+    for x in results {
+        photo = x.unwrap();
+    }
+
+    HttpResponse::Ok().content_type("image/jpg").body(photo)
+}
+
+
+async fn docs(req: web::HttpRequest) -> Result<NamedFile, std::io::Error> {
+    NamedFile::open("./docs/sex_offender_search.html")
+}
+
 
 
 ///Builds the search portion of the search query.
 ///This fits the search requirements but it would be nice
 ///come back and make this more robust.
-///
-///
 fn build_search_text(query: &SearchQuery) -> String {
     let mut search_frag = String::new();
     let mut add_op = false;
@@ -126,7 +208,7 @@ fn build_search_text(query: &SearchQuery) -> String {
     search_frag
 }
 
-fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
+async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
     let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
@@ -192,72 +274,22 @@ fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Erro
     Ok(search_vec)
 }
 
-///converts the Json request body into a struct
-///that we use to build a search query. We run that query
-///and return the results as a json document.
-fn search(info: web::Json<SearchQuery>) -> HttpResponse {
 
-    let tq = info.into_inner();
-    let rez = search_offenders(&tq).expect("my dam results");
-    let rezcount = rez.len();
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
 
-    let jr = json!({
-        "totalHits": rezcount,
-        "maxPageResults": "nolimit",
-        "currentPage": rezcount,
-        "results": rez,
-    });
-
-    HttpResponse::Ok().content_type("application/json").json(jr)
-}
-
-///Search results contain zero or more photo names that can be
-///passed back to the server to retrieve the actual image data.
-///An HttpResponse with an image content type is returned.
-fn get_photo(info: web::Path<(String,String)>) -> HttpResponse {
-    let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
-    let photo_name = &info.1;
-   let state = &info.0;
-
-    let conn = Connection::open(sqlp).expect("Unable to open data connection");
-    let mut photo: Vec<u8> = Vec::new();
-
-    let qry = format!("Select data from photos where name='{}' and state='{}'", photo_name, state);
-    let mut stmt = conn.prepare(&qry).expect("my damn prepared query");
-
-    let mut results = stmt
-        .query_map(NO_PARAMS, |row| {
-            let bts: Vec<u8> = row.get(0)?;
-            Ok(bts)
-        })
-        .expect("My damn bytes");
-
-    for x in results {
-        photo = x.unwrap();
-    }
-
-    HttpResponse::Ok().content_type("image/jpg").body(photo)
-}
-
-use actix_files::NamedFile;
-
-fn docs(req: web::HttpRequest) -> NamedFile {
-
-    NamedFile::open("./docs/sex_offender_search.html").expect("my dam file")
-}
-
-fn main() -> std::io::Result<()> {
-    //env::set_var("SQL_PATH","/opt/eyemetric/sex_offender/app/sexoffenders.sqlite");
-    env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    //env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    env::set_var("AUTH_DB", "/media/d-rezzer/data/dev/eyemetric/sex_offender/app/auth.db");
+    //env::set_var("VALIDATE_URL","http://173.220.177.75:9034/TPASSMobileService/K12Service.svc/TestCredential/");
     HttpServer::new(|| {
         App::new()
-            .service(web::resource("/search").to(search))
-            .service(web::resource("/photo/{state}/{name}").to(get_photo))
-            .service(web::resource("/docs").to(docs))
+            .route("/search", web::post().to(search))
+            .route("/docs", web::get().to(docs))
+            .route("/photo/{state}/{name}", web::get().to(get_photo))
     })
-    .bind("0.0.0.0:8090")
-    .expect("Unable to start search server")
-    .run()
+        .bind("0.0.0.0:8090")
+        .expect("Unable to start search server")
+        .run().await
 
-    // let _ = sys.run();
+
 }
