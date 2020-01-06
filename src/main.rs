@@ -15,6 +15,8 @@ use std::fs;
 use actix_files::NamedFile;
 use actix_web::client;
 use actix_web::error::ParseError::Uri;
+use user_pass::user_account::UserAccount;
+use base64::display::Base64Display;
 
 #[derive(Deserialize)]
 struct Info {
@@ -50,23 +52,26 @@ struct SearchQuery {
     state: Option<Vec<String>>,
 }
 
-///Pass on Authorization Token to TPass and let it do the authorization check
+///check user/pass against local auth db.
  async fn validate_request(req: &HttpRequest) -> bool {
 
-    let token = req.headers().get("Authorization").unwrap().to_str().unwrap();
-    let client = client::Client::default();
-    let validation_url = env::var("VALIDATE_URL").expect("VALIDATE_URL env var not set");
-    let response = client.get(validation_url)
-        .header("Authorization", token)
-        .send()
-        .await;
+    match req.headers().get("Authorization") {
+        Some(auth) => {
 
-    let validation_resp = response.unwrap().body().await.unwrap().len();
-    //4 is length of "true" and true is what we get in the body.
-    if validation_resp == 4 {
-        true
-    } else {
-        false
+            let token = auth.to_str().unwrap();
+            let b64str = &token[6..];
+            let decoded = base64::decode(&token[6..]).unwrap();
+            let orig = String::from_utf8(decoded).unwrap();
+            let upv: Vec<&str> = orig.split(":").collect();
+            let user = upv[0];
+            let pass = upv[1];
+            let is_verified = UserAccount::verify(user, pass).unwrap_or_else(|_| false);
+            if !is_verified { return false }; //short circuit.
+            let is_active = UserAccount::is_active(user);
+
+            is_verified && is_active
+        },
+        None => false //no auth token, not valid
     }
 
 }
@@ -278,7 +283,7 @@ async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
 
-    //env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
+    env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
     env::set_var("AUTH_DB", "/media/d-rezzer/data/dev/eyemetric/sex_offender/app/auth.db");
     //env::set_var("VALIDATE_URL","http://173.220.177.75:9034/TPASSMobileService/K12Service.svc/TestCredential/");
     HttpServer::new(|| {
