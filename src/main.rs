@@ -18,6 +18,8 @@ use actix_web::error::ParseError::Uri;
 use user_pass::user_account::UserAccount;
 use base64::display::Base64Display;
 
+static SXOFF_DB: &'static str = "SXOFF_DB";
+
 #[derive(Deserialize)]
 struct Info {
     username: String,
@@ -106,7 +108,7 @@ async fn get_photo(req: HttpRequest, info: web::Path<(String,String)>) -> HttpRe
         return HttpResponse::Unauthorized().finish();
     }
 
-    let sqlp = env::var("SQL_PATH").expect("SQL_PATH Env var not set");
+    let sqlp = env::var(SXOFF_DB).expect("SQL_PATH Env var not set");
     let photo_name = &info.1;
     let state = &info.0;
 
@@ -214,7 +216,7 @@ fn build_search_text(query: &SearchQuery) -> String {
 }
 
 async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite::Error> {
-    let sqlp = env::var("SQL_PATH").expect("a damn sql path env variable");
+    let sqlp = env::var(SXOFF_DB).expect("a damn sql path env variable");
     let conn = Connection::open(sqlp).expect("Unable to open data connection");
     let mut search_vec: Vec<Offender> = Vec::new();
     let qry = format!(
@@ -283,9 +285,6 @@ async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
 
-    env::set_var("SQL_PATH","/media/d-rezzer/data/dev/eyemetric/sex_offender/app/sexoffenders.sqlite");
-    env::set_var("AUTH_DB", "/media/d-rezzer/data/dev/eyemetric/sex_offender/app/auth.db");
-    //env::set_var("VALIDATE_URL","http://173.220.177.75:9034/TPASSMobileService/K12Service.svc/TestCredential/");
     HttpServer::new(|| {
         App::new()
             .route("/search", web::post().to(search))
