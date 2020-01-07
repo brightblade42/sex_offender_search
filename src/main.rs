@@ -233,17 +233,11 @@ async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite
         .query_map(NO_PARAMS, |row| {
             //TODO see if api lets me get these values as the type i need.
 
-            let alias: String = row.get(10)?;
-            let ad: String = row.get(11)?;
-            let off: String = row.get(12)?;
-            let st: String = row.get(13)?;
-            let ph: String = row.get(14)?;
-
-            let addresses = serde_json::from_str(ad.as_str()).expect("a damn alias");
-            let aliases = serde_json::from_str(alias.as_str()).expect("a damn alias");
-            let offenses = serde_json::from_str(off.as_str()).expect("a dam value");
-            let scarsTattoos = serde_json::from_str(st.as_str()).expect("a damn alias");
-            let photos = serde_json::from_str(ph.as_str()).expect("a damn photo");
+            let aliases: String = row.get(10)?;
+            let addresses: String = row.get(11)?;
+            let offenses: String = row.get(12)?;
+            let scars_tats: String = row.get(13)?;
+            let photos: String = row.get(14)?;
 
             let mut offender = Offender {
                 id: row.get(0)?,
@@ -256,11 +250,11 @@ async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite
                 race: row.get(7)?,
                 sex: row.get(8)?,
                 state: row.get(9)?,
-                aliases,
-                addresses,
-                offenses,
-                scarsTattoos,
-                photos,
+                aliases: serde_json::from_str(aliases.as_str()).expect("no alias found"),
+                addresses: serde_json::from_str(addresses.as_str()).expect("a damn alias"),
+                offenses: serde_json::from_str(offenses.as_str()).expect("no offense column"),
+                scarsTattoos: serde_json::from_str(scars_tats.as_str()).expect("a damn alias"),
+                photos: serde_json::from_str(photos.as_str()).expect("a damn photo"),
             };
 
             Ok(offender)
