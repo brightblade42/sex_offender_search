@@ -175,6 +175,7 @@ fn build_search_text(query: &SearchQuery) -> String {
         }
 
     }
+
     if let Some(addr) = &query.address {
         if add_op {
             search_frag.push_str(" and ");
@@ -279,6 +280,8 @@ async fn search_offenders(query: &SearchQuery) -> Result<Vec<Offender>, rusqlite
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
 
+    env::set_var("AUTH_DB","/opt/eyemetric/sex_offender/app/auth.db");
+    env::set_var("SXOFF_DB","/opt/eyemetric/sex_offender/app/sexoffenders.sqlite");
     HttpServer::new(|| {
         App::new()
             .route("/search", web::post().to(search))
